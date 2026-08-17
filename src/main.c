@@ -9,37 +9,37 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 
 #include "raylib.h"
 #include "math.h"
+#include "stdlib.h"
 
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
+#include "helpers.h"
 
-#define WIDTH 800
-#define HEIGHT 600
-
-#define MAXs32 2147483648
+#define WIDTH 1000
+#define HEIGHT 680
 
 #define BUFFER_SIZE 4096
 #define SAMPLE_RATE 44100
 
+/// @brief One grain of the granular sampler
 typedef struct{
-	Rectangle bounds;
-	int resolution;
+	int readPosition;
+	int readDirection;
+	float volume; //1.0f is max
 	float speed;
+}Grain;
 
-	int loopStart;
-	int loopEnd;
-	float readPosition;
-	int readDirection; // 1 or -1
+typedef struct{
+	int n; //number of grains
+	Grain *grains;
 
-	bool showLoopLines;
-	bool isPingPong;
-	int lineSelected; //0 is none, 1 is loopStart, 2 is loopEnd
-}WaveViewParameters;
+	int waveSize; //required to draw and to check end of sample
+}GrainController;
 
-void DrawWaveVisualizer(Wave wave, WaveViewParameters wp);
-void DrawWaveViewStatic(Wave wave, WaveViewParameters wp);
-void DrawWaveViewLines(WaveViewParameters wp);
 
-void MoveLoopLines(WaveViewParameters *wp, Vector2 mousePos);
+void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution);
+void DrawGrains(GrainController gc, Rectangle bounds);
+GrainController CreateGrainController(int n, int waveSize, int randomness);
+void FreeGrainController(GrainController *gc);
 
 float fMap(float a, float minA, float maxA, float newMin, float newMax);
 float fLerp(float a, float b, float t);
@@ -66,154 +66,97 @@ int main ()
 	float *waveData = testWave.data;
 
 	//initialization
-	Rectangle wvpBounds = {.x = 0, .y = 0, .width = WIDTH, .height = HEIGHT/3};
-	WaveViewParameters wvp = {.bounds = wvpBounds, .resolution = 2000, .showLoopLines = true, .speed = 1.0f, .isPingPong = true, .readDirection = 1};
-	wvp.loopStart = wvpBounds.x + wvpBounds.width / 3;
-	wvp.loopEnd = wvpBounds.x + wvpBounds.width * 2 / 3;
-
-	wvp.readPosition = pointToSampleWP(wvp.loopStart, wvp, testWave);
+	Rectangle waveViewBounds = {.x = 0, .y = 0, .width = WIDTH/4 * 3, .height = HEIGHT/3};
+	Rectangle grainViewBounds = {.x = 0, .y = HEIGHT/3 + 10, .width = WIDTH/4 * 3, .height = HEIGHT - (HEIGHT/3 + 10)};
+	GrainController gc = CreateGrainController(100, testWave.channels * testWave.frameCount, 10);
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
 		Vector2 mousePosition = GetMousePosition();
-		MoveLoopLines(&wvp, mousePosition);
 		
-		if(IsKeyPressed(KEY_DOWN)){
-			wvp.speed -= 0.1f;
-		}
-		if(IsKeyPressed(KEY_UP)){
-			wvp.speed += 0.1f;
-		}
 		// drawing
 		BeginDrawing();
 		// Setup the back buffer for drawing (clear color and depth buffers)
 		ClearBackground(LIGHTGRAY);
-		DrawWaveVisualizer(testWave, wvp);
-
-		//debug text
-		char debugText[20] = "Line Selected: 0";
-		debugText[15] = wvp.lineSelected + '0';
-		DrawText(debugText, 550, 20, 20, BLACK);
-
-		int samplePointStart = pointToSampleWP(wvp.loopStart, wvp, testWave);
-		int samplePointEnd = pointToSampleWP(wvp.loopEnd, wvp, testWave);
-		sprintf(debugText, "%d", wvp.readDirection);
-		DrawText(debugText, 550, 40, 20, BLACK);
+		DrawWaveViewStatic(testWave, waveViewBounds, 1000);
+		DrawGrains(gc, grainViewBounds);
 
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
 
 		//audio processing
+		/*
 		if(IsAudioStreamProcessed(stream)){
-			if(wvp.isPingPong){
-				for(int i = 0; i < BUFFER_SIZE; i++){
-					if(wvp.readPosition >= samplePointEnd && wvp.readDirection == 1)
-						wvp.readDirection = -1;
-					else if(wvp.readPosition <= samplePointStart && wvp.readDirection == -1)
-						wvp.readDirection = 1;
-
-					buffer[i] = waveData[(int)wvp.readPosition] * 0;
-					wvp.readPosition += wvp.speed * 2 * wvp.readDirection;
-				}
-			}
-			else{
-				for(int i = 0; i < BUFFER_SIZE; i++){
-					if(wvp.readPosition >= samplePointEnd)
-						wvp.readPosition = samplePointStart;
-					buffer[i] = waveData[(int)wvp.readPosition];
-					wvp.readPosition += wvp.speed * 2;
-				}
+			for(int i = 0; i < BUFFER_SIZE; i++){
+				if(wvp.readPosition >= testWave.channels * testWave.frameCount)
+					wvp.readPosition = 0;
+				buffer[i] = waveData[(int)wvp.readPosition];
+				wvp.readPosition += wvp.speed * 2;
 			}
 			UpdateAudioStream(stream, buffer, BUFFER_SIZE);
 		}
+			*/
 	}
 
 	// cleanup
 	UnloadWave(testWave);
+	FreeGrainController(&gc);
 
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();
 	return 0;
 }
 
-void MoveLoopLines(WaveViewParameters *wp, Vector2 mousePos){
-	//return if loop lines are disabled, mouse is outside viewer window or mouse isnt held
-	if(!wp->showLoopLines || !IsMouseButtonDown(MOUSE_LEFT_BUTTON) ||
-	(mousePos.x < wp->bounds.x || mousePos.x >  wp->bounds.x + wp->bounds.width) ||
-	(mousePos.y < wp->bounds.y || mousePos.y > wp->bounds.y + wp->bounds.height)){
-		wp->lineSelected = 0;
-		return;
-	}
-
-	if(wp->lineSelected == 0){
-		float distStart = fabs(mousePos.x - wp->loopStart);
-		float distEnd = fabs(mousePos.x - wp->loopEnd);
-
-		float dist = distStart < distEnd ? distStart : distEnd;
-		float selected = distStart < distEnd ? 1 : 2;
-		if(dist <= 2) wp->lineSelected = selected;
-	}
-	
-	if(wp->lineSelected == 1 && mousePos.x < wp->loopEnd - 2) wp->loopStart = mousePos.x;
-	else if(wp->lineSelected == 2 && mousePos.x > wp->loopStart + 2) wp->loopEnd = mousePos.x;
-
-}
-
-void DrawWaveVisualizer(Wave wave, WaveViewParameters wp){
-	DrawWaveViewStatic(wave, wp);
-	DrawWaveViewLines(wp);
-}
-
 /// @brief Draws main viewer window and audio data
-void DrawWaveViewStatic(Wave wave, WaveViewParameters wp){
-	DrawRectangleLinesEx(wp.bounds, 1, BLACK);
+void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution){
+	DrawRectangleLinesEx(bounds, 1, BLACK);
 	
 	int sampleSize = wave.channels * wave.frameCount;
 	float *waveData = wave.data;
 
-	int yMid = wp.bounds.y + wp.bounds.height / 2;
+	int yMid = bounds.y + bounds.height / 2;
 
-	for(int i = 0; i < wp.resolution; i++){
-		int x = wp.bounds.x + wp.bounds.width * i / wp.resolution;
+	for(int i = 0; i < resolution; i++){
+		int x = bounds.x + bounds.width * i / resolution;
 
-		float yOffsetRaw = waveData[i * sampleSize / wp.resolution];
-		int y = (int)fMap(yOffsetRaw, -1 , 1, wp.bounds.y + wp.bounds.height, wp.bounds.y);
+		float yOffsetRaw = waveData[i * sampleSize / resolution];
+		int y = (int)fMap(yOffsetRaw, -1 , 1, bounds.y + bounds.height, bounds.y);
 		
 		if(fabs(yMid - y) > 2) DrawLine(x, yMid, x, y, RED);
 		else DrawPixel(x, yMid, RED);
 	}
 }
 
-void DrawWaveViewLines(WaveViewParameters wp){
-	if(wp.showLoopLines){
-		DrawLine(wp.loopStart, wp.bounds.y, wp.loopStart, wp.bounds.y + wp.bounds.height, DARKBLUE);
-		DrawLine(wp.loopEnd, wp.bounds.y, wp.loopEnd, wp.bounds.y + wp.bounds.height, DARKBLUE);
+void DrawGrains(GrainController gc, Rectangle bounds){
+	DrawRectangleLinesEx(bounds, 1, BLACK);
+	float margin = 10;
+	float grainSeparation = (bounds.height - margin * 2) / (gc.n - 1);
+	for(int i = 0; i < gc.n; i++){
+		int y = bounds.y + margin + grainSeparation * i;
+		int x = (int)fMap(gc.grains[i].readPosition, 0, gc.waveSize, bounds.x, bounds.x + bounds.width);
+		DrawCircle(x, y, 1, BLACK);
 	}
 }
 
-/// @brief Maps float a, with maximum and minimum values maxA and minA, to the new maximum and minumum
-/// @return Remapped value of a
-float fMap(float a, float minA, float maxA, float newMin, float newMax){
-	//define minA as 0 : a - minA
-	//define maxA as 1 (scale range to have size 1) : (a - minA) / (maxA - minA)
-	//lerp between newMin and newMax
-	float t = (a - minA) / (maxA - minA);
-	return fLerp(newMin, newMax, t);
+/// @param randomness value between 0 and 100, changes offset in relation to main read point (0 is no offset)
+GrainController CreateGrainController(int n, int waveSize, int randomness){
+	GrainController gc;
+	gc.grains = malloc(sizeof(Grain) * n);
+	gc.n = n;
+	gc.waveSize = waveSize;
+
+	int start = waveSize/6;
+	float offsetMultiplier = (float)randomness / 1000.0f;
+
+	for(int i = 0; i < n; i++){
+		gc.grains[i].readDirection = 1;
+		gc.grains[i].speed = 1;
+		gc.grains[i].volume = 1/(float)n;
+		gc.grains[i].readPosition = start + GetRandomValue(-waveSize * offsetMultiplier, waveSize * offsetMultiplier);
+	}
+	return gc;
 }
 
-/// @brief Float linear interpolation function
-/// @return a when t = 0, b when t = 1, and interpolates for values of t between 0 and 1
-float fLerp(float a, float b, float t){
-	t = (t < 0) ? 0 : t; //map negatives to 0
-	t = (t > 1) ? 1 : t; //map values greater than 1 to 1
-	return a + (b - a) * t;
-}
-
-/// @brief Given an x coordinate, returns the sample associated to that position in the wave viewer
-int pointToSampleWP(int x, WaveViewParameters wp, Wave wave){
-	if(x < wp.bounds.x || x > wp.bounds.x + wp.bounds.width)
-		return 0;
-	int sampleSize = wave.channels * wave.frameCount;
-	int final = (int)fMap(x, wp.bounds.x, wp.bounds.x + wp.bounds.width, 0, sampleSize);
-	return final;
+void FreeGrainController(GrainController *gc){
+	free(gc->grains);
 }
