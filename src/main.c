@@ -22,7 +22,7 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 
 /// @brief One grain of the granular sampler
 typedef struct{
-	int readPosition;
+	float readPosition;
 	int readDirection;
 	float volume; //1.0f is max
 	float speed;
@@ -40,9 +40,6 @@ void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution);
 void DrawGrains(GrainController gc, Rectangle bounds);
 GrainController CreateGrainController(int n, int waveSize, int randomness);
 void FreeGrainController(GrainController *gc);
-
-float fMap(float a, float minA, float maxA, float newMin, float newMax);
-float fLerp(float a, float b, float t);
 
 int main ()
 {
@@ -62,13 +59,13 @@ int main ()
 
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
 	SearchAndSetResourceDir("resources");
-	Wave testWave = LoadWave("audio/test.mp3");
+	Wave testWave = LoadWave("audio/gymnopedie1.mp3");
 	float *waveData = testWave.data;
 
 	//initialization
 	Rectangle waveViewBounds = {.x = 0, .y = 0, .width = WIDTH/4 * 3, .height = HEIGHT/3};
 	Rectangle grainViewBounds = {.x = 0, .y = HEIGHT/3 + 10, .width = WIDTH/4 * 3, .height = HEIGHT - (HEIGHT/3 + 10)};
-	GrainController gc = CreateGrainController(100, testWave.channels * testWave.frameCount, 10);
+	GrainController gc = CreateGrainController(20, testWave.channels * testWave.frameCount, 10);
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
@@ -84,18 +81,10 @@ int main ()
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
 
-		//audio processing
-		/*
 		if(IsAudioStreamProcessed(stream)){
-			for(int i = 0; i < BUFFER_SIZE; i++){
-				if(wvp.readPosition >= testWave.channels * testWave.frameCount)
-					wvp.readPosition = 0;
-				buffer[i] = waveData[(int)wvp.readPosition];
-				wvp.readPosition += wvp.speed * 2;
-			}
+			ProcessAudioGrains(gc, testWave, buffer);
 			UpdateAudioStream(stream, buffer, BUFFER_SIZE);
 		}
-			*/
 	}
 
 	// cleanup
@@ -119,7 +108,7 @@ void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution){
 	for(int i = 0; i < resolution; i++){
 		int x = bounds.x + bounds.width * i / resolution;
 
-		float yOffsetRaw = waveData[i * sampleSize / resolution];
+		float yOffsetRaw = waveData[i * (sampleSize / resolution)];
 		int y = (int)fMap(yOffsetRaw, -1 , 1, bounds.y + bounds.height, bounds.y);
 		
 		if(fabs(yMid - y) > 2) DrawLine(x, yMid, x, y, RED);
@@ -130,7 +119,7 @@ void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution){
 void DrawGrains(GrainController gc, Rectangle bounds){
 	DrawRectangleLinesEx(bounds, 1, BLACK);
 	float margin = 10;
-	float grainSeparation = (bounds.height - margin * 2) / (gc.n - 1);
+	float grainSeparation = (gc.n > 1) ? (bounds.height - margin * 2) / (gc.n - 1) : 0;
 	for(int i = 0; i < gc.n; i++){
 		int y = bounds.y + margin + grainSeparation * i;
 		int x = (int)fMap(gc.grains[i].readPosition, 0, gc.waveSize, bounds.x, bounds.x + bounds.width);
@@ -151,7 +140,7 @@ GrainController CreateGrainController(int n, int waveSize, int randomness){
 	for(int i = 0; i < n; i++){
 		gc.grains[i].readDirection = 1;
 		gc.grains[i].speed = 1;
-		gc.grains[i].volume = 1/(float)n;
+		gc.grains[i].volume = 1/(float)n; //normalization
 		gc.grains[i].readPosition = start + GetRandomValue(-waveSize * offsetMultiplier, waveSize * offsetMultiplier);
 	}
 	return gc;
@@ -159,4 +148,27 @@ GrainController CreateGrainController(int n, int waveSize, int randomness){
 
 void FreeGrainController(GrainController *gc){
 	free(gc->grains);
+}
+
+/// @brief Fills the buffer with new data considering the grains and updates grain data. Called when stream finishes processing.
+//optimization idea: get smallest start and higher end and loop only once checking grains on each point
+void ProcessAudioGrains(GrainController gc, Wave wave, float *buffer){
+	int waveSize = wave.channels * wave.frameCount;
+	float *waveData = wave.data;
+
+	//reset buffer
+	for(int i = 0; i < BUFFER_SIZE; i++)
+		buffer[i] = 0;
+
+	//fill buffer
+	for(int i = 0; i < gc.n; i++){
+		for(int j = 0; j < BUFFER_SIZE; j++){
+			Grain g = gc.grains[i];
+			buffer[j] += waveData[(int)g.readPosition] * g.volume; //fix with proper stereo buffer filling
+			gc.grains[i].readPosition = g.readPosition + g.speed * 2;
+			
+			if(gc.grains[i].readPosition >= waveSize)
+				gc.grains[i].readPosition = 0;
+		}
+	}
 }
