@@ -7,6 +7,7 @@ typedef struct{
 	int readDirection;
 	float volume; //1.0f is max
 	float speed;
+    float offset; //value between -100 and 100
 }Grain;
 
 typedef struct{

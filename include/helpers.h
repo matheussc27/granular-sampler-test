@@ -2,6 +2,7 @@
 #include "math.h"
 
 #define s32MAX 2147483648
+#define OFFSET_C 1000
 
 /// @brief Maps float a, with maximum and minimum values maxA and minA, to the new maximum and minumum
 /// @return Remapped value of a

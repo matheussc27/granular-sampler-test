@@ -38,7 +38,13 @@ int main ()
 	//initialization
 	Rectangle waveViewBounds = {.x = 10, .y = 10, .width = WIDTH/4 * 3, .height = HEIGHT/4};
 	Rectangle grainViewBounds = {.x = 10, .y = HEIGHT/4 + 20, .width = WIDTH/4 * 3, .height = HEIGHT/4 + 10};
-	GrainController gc = CreateGrainController(200, testWave.channels * testWave.frameCount, 50);
+	Rectangle volumeBounds = {.x = 10, .y = HEIGHT/2 + 40, .width = WIDTH/4 * 3, .height = HEIGHT - (HEIGHT/2 + 60)};
+	
+	int randomness = 10;
+	GrainController gc = CreateGrainController(200, testWave.channels * testWave.frameCount, randomness);
+	
+	int nVcps = 4;
+	VolumeControlPoint *vcps = CreateVolumePoints(nVcps, randomness);
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
@@ -48,8 +54,9 @@ int main ()
 		BeginDrawing();
 		// Setup the back buffer for drawing (clear color and depth buffers)
 		ClearBackground(LIGHTGRAY);
-		DrawWaveViewStatic(testWave, waveViewBounds, 1000);
+		DrawWaveViewStatic(testWave, waveViewBounds, 2000);
 		DrawGrains(gc, grainViewBounds);
+		DrawVolumeControl(volumeBounds, vcps, nVcps, randomness);
 
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
@@ -63,6 +70,7 @@ int main ()
 	// cleanup
 	UnloadWave(testWave);
 	FreeGrainController(&gc);
+	FreeVolumePoints(vcps);
 
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();

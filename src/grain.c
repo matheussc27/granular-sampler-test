@@ -7,14 +7,16 @@ GrainController CreateGrainController(int n, int frameCount, int randomness){
 	gc.n = n;
 	gc.frameCount = frameCount;
 
-	float offsetMultiplier = (float)randomness / 1000.0f;
-	float start = offsetMultiplier * frameCount;
+	float start = (float)frameCount / 8.0f;
 
 	for(int i = 0; i < n; i++){
-		gc.grains[i].readDirection = 1;
-		gc.grains[i].speed = 1;
-		gc.grains[i].volume = 1/(float)n; //normalization
-		gc.grains[i].readPosition = start + GetRandomValue(-frameCount * offsetMultiplier, frameCount * offsetMultiplier);
+        Grain *g = &gc.grains[i];
+
+		g->readDirection = 1;
+		g->speed = 1;
+		g->volume = 1/(float)n; //normalization
+        g->offset = GetRandomValue(-randomness, randomness);
+		g->readPosition = start + g->offset * ((float)frameCount / 1000.0f);
 	}
 	return gc;
 }
