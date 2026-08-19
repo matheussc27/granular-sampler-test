@@ -43,7 +43,7 @@ int main ()
 	int randomness = 10;
 	GrainController gc = CreateGrainController(200, testWave.channels * testWave.frameCount, randomness);
 	
-	int nVcps = 4;
+	int nVcps = 5;
 	VolumeControlPoint *vcps = CreateVolumePoints(nVcps, randomness);
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window

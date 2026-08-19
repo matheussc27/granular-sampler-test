@@ -15,4 +15,4 @@ void DrawGrains(GrainController gc, Rectangle bounds);
 void DrawVolumeControl(Rectangle bounds, VolumeControlPoint *vcps, int n, int maxOffset);
 
 VolumeControlPoint *CreateVolumePoints(int n, int maxOffset);
-void FreeAudioPoints(VolumeControlPoint *vcps);
+void FreeVolumePoints(VolumeControlPoint *vcps);

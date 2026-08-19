@@ -38,11 +38,24 @@ void DrawGrains(GrainController gc, Rectangle bounds){
 void DrawVolumeControl(Rectangle bounds, VolumeControlPoint *vcps, int n, int maxOffset){
     DrawRectangleLinesEx(bounds, 1, BLACK);
     char text[30];
-
+    Vector2 prev;
     Vector2 boundLim = {bounds.x + bounds.width, bounds.y + bounds.height};
+
+    //line and circle renderpasses separate to avoid lines drawing over circles 
     for(int i = 0; i < n; i++){
         int x = (int)fMap(vcps[i].offset, -maxOffset, maxOffset, bounds.x, boundLim.x);
         int y = (int)fMap(vcps[i].volume, 0, 1, bounds.y, boundLim.y);
+
+        if(i >= 1) DrawLine(x, y, prev.x, prev.y, BLACK);
+
+        prev.x = x; 
+        prev.y = y;
+    }
+
+    for(int i = 0; i < n; i++){
+        int x = (int)fMap(vcps[i].offset, -maxOffset, maxOffset, bounds.x, boundLim.x);
+        int y = (int)fMap(vcps[i].volume, 0, 1, bounds.y, boundLim.y);
+
         DrawCircle(x, y, 4, RED);
         sprintf(text, "%.2f", vcps[i].volume);
         DrawText(text, x - 12, y + -30, 12, BLACK);
