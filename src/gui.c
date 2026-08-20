@@ -35,16 +35,17 @@ void DrawGrains(GrainController gc, Rectangle bounds){
 	}
 }
 
-void DrawVolumeControl(Rectangle bounds, VolumeControlPoint *vcps, int n, int maxOffset){
+void DrawVolumeControl(Rectangle bounds, VolumePointsHandler vph){
     DrawRectangleLinesEx(bounds, 1, BLACK);
     char text[30];
     Vector2 prev;
     Vector2 boundLim = {bounds.x + bounds.width, bounds.y + bounds.height};
 
     //line and circle renderpasses separate to avoid lines drawing over circles 
-    for(int i = 0; i < n; i++){
-        int x = (int)fMap(vcps[i].offset, -maxOffset, maxOffset, bounds.x, boundLim.x);
-        int y = (int)fMap(vcps[i].volume, 0, 1, bounds.y, boundLim.y);
+    for(int i = 0; i < vph.n; i++){
+        VolumeControlPoint *vp = &vph.vcps[i];
+        int x = (int)fMap(vp->offset, -vph.maxOffset, vph.maxOffset, bounds.x, boundLim.x);
+        int y = (int)fMap(vp->volume, 0, 1, boundLim.y, bounds.y);
 
         if(i >= 1) DrawLine(x, y, prev.x, prev.y, BLACK);
 
@@ -52,27 +53,66 @@ void DrawVolumeControl(Rectangle bounds, VolumeControlPoint *vcps, int n, int ma
         prev.y = y;
     }
 
-    for(int i = 0; i < n; i++){
-        int x = (int)fMap(vcps[i].offset, -maxOffset, maxOffset, bounds.x, boundLim.x);
-        int y = (int)fMap(vcps[i].volume, 0, 1, bounds.y, boundLim.y);
+    for(int i = 0; i < vph.n; i++){
+        VolumeControlPoint *vp = &vph.vcps[i];
+        int x = (int)fMap(vp->offset, -vph.maxOffset, vph.maxOffset, bounds.x, boundLim.x);
+        int y = (int)fMap(vp->volume, 0, 1, boundLim.y, bounds.y);
 
-        DrawCircle(x, y, 4, RED);
-        sprintf(text, "%.2f", vcps[i].volume);
+        if(vp != vph.selected)
+            DrawCircle(x, y, 4, RED);
+        else
+            DrawCircle(x, y, 4, BLUE);
+        sprintf(text, "%.2f", vp->volume);
         DrawText(text, x - 12, y + -30, 12, BLACK);
     }
 }
 
-VolumeControlPoint *CreateVolumePoints(int n, int maxOffset){
-    VolumeControlPoint *vcps = malloc(sizeof(VolumeControlPoint) * n);
+VolumePointsHandler CreateVolumeHandler(int n, int maxOffset){
+    VolumePointsHandler vph;
+
+    vph.vcps = malloc(sizeof(VolumeControlPoint) * n);
+    vph.n = n;
+    vph.maxOffset = maxOffset;
+    vph.selected = NULL;
 
     for(int i = 0; i < n; i++){
-        vcps[i].offset = fMap(i, 0, n - 1, -maxOffset, maxOffset);
-        vcps[i].volume = 0.5f;
-        vcps[i].selected = false;
+        VolumeControlPoint *vp = &vph.vcps[i];
+        vp->offset = fMap(i, 0, n - 1, -maxOffset, maxOffset);
+        vp->volume = 0.5f;
     }
-    return vcps;
+    return vph;
 }
 
-void FreeVolumePoints(VolumeControlPoint *vcps){
-    free(vcps);
+void FreeVolumeHandler(VolumePointsHandler vph){
+    free(vph.vcps);
+}
+
+void CheckVolumeChanges(Rectangle bounds, VolumePointsHandler *vph){
+    Vector2 boundLim = {.x = bounds.x + bounds.width, .y = bounds.y + bounds.height};
+
+    Vector2 mousePos = GetMousePosition();
+
+    if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
+        //outside gui window
+        if(mousePos.x < bounds.x || mousePos.x > boundLim.x
+        || mousePos.y < bounds.y || mousePos.y > boundLim.y){
+            return;
+        }
+
+        for(int i = 0; i < vph->n; i++){
+            VolumeControlPoint *vp = &vph->vcps[i];
+            int x = (int)fMap(vp->offset, -vph->maxOffset, vph->maxOffset, bounds.x, boundLim.x);
+            int y = (int)fMap(vp->volume, 0, 1, boundLim.y, bounds.y);
+
+            if(pow(mousePos.x - x, 2) + pow(mousePos.y - y, 2) < 5*5 && vph->selected == NULL){
+                vph->selected = vp;
+                break;
+            }
+        }
+    }
+    else
+        vph->selected = NULL;
+
+    if(vph->selected != NULL)
+        vph->selected->volume = fMap(mousePos.y, boundLim.y, bounds.y, 0, 1);
 }

@@ -1,4 +1,5 @@
 #include "grain.h"
+#include "stdlib.h"
 
 /// @param randomness value between 0 and 100, changes offset in relation to main read point (0 is no offset)
 GrainController CreateGrainController(int n, int frameCount, int randomness){
@@ -15,7 +16,7 @@ GrainController CreateGrainController(int n, int frameCount, int randomness){
 		g->readDirection = 1;
 		g->speed = 1;
 		g->volume = 1/(float)n; //normalization
-        g->offset = GetRandomValue(-randomness, randomness);
+        g->offset = i > 1 ? GetRandomValue(-randomness, randomness) : 0;
 		g->readPosition = start + g->offset * ((float)frameCount / 1000.0f);
 	}
 	return gc;
@@ -47,4 +48,13 @@ void ProcessAudioGrains(GrainController gc, Wave wave, float *buffer, int buffer
 				g->readPosition = 0;
 		}
 	}
+}
+
+void UpdateGrainVolume(GrainController gc, VolumePointsHandler vph){
+	for(int i = 0; i < gc.n; i++){
+		//get what volume points grain is between
+		//get volume from lerp of volume points
+	}
+
+	//normalize volumes
 }
