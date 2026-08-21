@@ -40,8 +40,8 @@ int main ()
 	Rectangle grainViewBounds = {.x = 10, .y = HEIGHT/4 + 20, .width = WIDTH/4 * 3, .height = HEIGHT/4 + 10};
 	Rectangle volumeBounds = {.x = 10, .y = HEIGHT/2 + 40, .width = WIDTH/4 * 3, .height = HEIGHT - (HEIGHT/2 + 60)};
 	
-	int randomness = 10;
-	GrainController gc = CreateGrainController(200, testWave.channels * testWave.frameCount, randomness);
+	int randomness = 100;
+	GrainController gc = CreateGrainController(10, testWave.channels * testWave.frameCount, randomness);
 	
 	int nVcps = 5;
 	VolumePointsHandler vph = CreateVolumeHandler(5, randomness);
@@ -50,7 +50,8 @@ int main ()
 	{
 		
 		CheckVolumeChanges(volumeBounds, &vph);
-		
+		UpdateGrainVolume(gc, vph);
+
 		// drawing
 		BeginDrawing();
 		// Setup the back buffer for drawing (clear color and depth buffers)
@@ -64,6 +65,11 @@ int main ()
 
 		if(IsAudioStreamProcessed(stream)){
 			ProcessAudioGrains(gc, testWave, buffer, BUFFER_SIZE);
+
+			//before passing buffer to audio stream, clip all samples at [-1.0f, 1.0f] (safeguarding)
+			for(int i = 0; i < BUFFER_SIZE * 2; i++)
+				buffer[i] = fLimit(buffer[i], -1.0f, 1.0f);
+				
 			UpdateAudioStream(stream, buffer, BUFFER_SIZE);
 		}
 	}

@@ -1,9 +1,6 @@
 #pragma once
 #include "raylib.h"
 
-#pragma once
-#include "gui.h"
-
 /// @brief One grain of the granular sampler
 typedef struct{
 	float readPosition; //current FRAME, not sample
@@ -20,9 +17,25 @@ typedef struct{
 	int frameCount; //required to draw and to check end of sample
 }GrainController;
 
+typedef struct{
+    float volume;
+    float offset;
+
+}VolumeControlPoint;
+
+typedef struct{
+    VolumeControlPoint *vcps;
+    int n;
+
+    int maxOffset;
+    VolumeControlPoint *selected;
+}VolumePointsHandler;
+
 GrainController CreateGrainController(int n, int waveSize, int randomness);
 void FreeGrainController(GrainController *gc);
 
-void ProcessAudioGrains(GrainController gc, Wave wave, float *buffer, int bufferSize);
+VolumePointsHandler CreateVolumeHandler(int n, int maxOffset);
+void FreeVolumeHandler(VolumePointsHandler vph);
 
+void ProcessAudioGrains(GrainController gc, Wave wave, float *buffer, int bufferSize);
 void UpdateGrainVolume(GrainController gc, VolumePointsHandler vph);

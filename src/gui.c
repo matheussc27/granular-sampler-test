@@ -1,7 +1,11 @@
 #include "gui.h"
+
 #include "helpers.h"
+#include "math.h"
+
 #include "stdlib.h"
 #include "stdio.h"
+
 
 /// @brief Draws main viewer window and audio data
 void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution){
@@ -67,26 +71,6 @@ void DrawVolumeControl(Rectangle bounds, VolumePointsHandler vph){
     }
 }
 
-VolumePointsHandler CreateVolumeHandler(int n, int maxOffset){
-    VolumePointsHandler vph;
-
-    vph.vcps = malloc(sizeof(VolumeControlPoint) * n);
-    vph.n = n;
-    vph.maxOffset = maxOffset;
-    vph.selected = NULL;
-
-    for(int i = 0; i < n; i++){
-        VolumeControlPoint *vp = &vph.vcps[i];
-        vp->offset = fMap(i, 0, n - 1, -maxOffset, maxOffset);
-        vp->volume = 0.5f;
-    }
-    return vph;
-}
-
-void FreeVolumeHandler(VolumePointsHandler vph){
-    free(vph.vcps);
-}
-
 void CheckVolumeChanges(Rectangle bounds, VolumePointsHandler *vph){
     Vector2 boundLim = {.x = bounds.x + bounds.width, .y = bounds.y + bounds.height};
 
@@ -113,6 +97,8 @@ void CheckVolumeChanges(Rectangle bounds, VolumePointsHandler *vph){
     else
         vph->selected = NULL;
 
-    if(vph->selected != NULL)
+    if(vph->selected != NULL){
         vph->selected->volume = fMap(mousePos.y, boundLim.y, bounds.y, 0, 1);
+        vph->selected->offset = fMap(mousePos.x, bounds.x, boundLim.x, -vph->maxOffset, vph->maxOffset);
+    }
 }
