@@ -1,7 +1,8 @@
 
 #include "raylib.h"
-#include "math.h"
-#include "stdlib.h"
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
 #include "helpers.h"
@@ -26,31 +27,33 @@ int main ()
 	float buffer[BUFFER_SIZE * 2];
 
 	AudioStream stream = LoadAudioStream(SAMPLE_RATE, 32, 2);
-    float pan = 0.5f;
-    SetAudioStreamPan(stream, pan);
+  float pan = 0.5f;
+  SetAudioStreamPan(stream, pan);
 	PlayAudioStream(stream);
 
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
 	SearchAndSetResourceDir("resources");
-	Wave testWave = LoadWave("audio/gymnopedie1.mp3");
-	float *waveData = testWave.data;
+	Wave testWave = LoadWave("audio/gymnopedie1.wav");
+	WaveFormat(&testWave, SAMPLE_RATE, 32, 2);
 
 	//initialization
-	Rectangle waveViewBounds = {.x = 10, .y = 10, .width = WIDTH/4 * 3, .height = HEIGHT/4};
-	Rectangle grainViewBounds = {.x = 10, .y = HEIGHT/4 + 20, .width = WIDTH/4 * 3, .height = HEIGHT/4 + 10};
-	Rectangle volumeBounds = {.x = 10, .y = HEIGHT/2 + 40, .width = WIDTH/4 * 3, .height = HEIGHT - (HEIGHT/2 + 60)};
+	int marginLeft = 10;
+	int guiWidth = WIDTH/6 * 3;
+	Rectangle waveViewBounds = {.x = marginLeft, .y = 10, .width = guiWidth, .height = HEIGHT/4};
+	Rectangle grainViewBounds = {.x = marginLeft, .y = HEIGHT/4 + 20, .width = guiWidth, .height = HEIGHT/4 + 10};
+	Rectangle volumeBounds = {.x = marginLeft, .y = HEIGHT/2 + 40, .width = guiWidth, .height = HEIGHT/4 + 10};
 	
-	int randomness = 100;
-	GrainController gc = CreateGrainController(10, testWave.channels * testWave.frameCount, randomness);
-	
-	int nVcps = 5;
-	VolumePointsHandler vph = CreateVolumeHandler(5, randomness);
+	float randomness = 10;
+	GrainController gc = CreateGrainController(10, testWave.frameCount, randomness);
+	VolumePointsHandler vph = CreateVolumeHandler(randomness);
+
+	InsertVolumePoint(&vph, (VolumeControlPoint){0.95f, randomness * 0.9f});
+
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
-		
-		CheckVolumeChanges(volumeBounds, &vph);
-		UpdateGrainVolume(gc, vph);
+
+		UpdateGrainVolume(&gc, vph);
 
 		// drawing
 		BeginDrawing();
@@ -77,7 +80,6 @@ int main ()
 	// cleanup
 	UnloadWave(testWave);
 	FreeGrainController(&gc);
-	FreeVolumeHandler(vph);
 
 	// destroy the window and cleanup the OpenGL context
 	CloseWindow();

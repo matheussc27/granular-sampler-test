@@ -20,22 +20,23 @@ typedef struct{
 typedef struct{
     float volume;
     float offset;
+    bool isFixed;
 
 }VolumeControlPoint;
 
 typedef struct{
-    VolumeControlPoint *vcps;
+    VolumeControlPoint vcps[100];
     int n;
 
     int maxOffset;
     VolumeControlPoint *selected;
 }VolumePointsHandler;
 
-GrainController CreateGrainController(int n, int waveSize, int randomness);
+GrainController CreateGrainController(int n, int frameCount, int randomness);
 void FreeGrainController(GrainController *gc);
 
-VolumePointsHandler CreateVolumeHandler(int n, int maxOffset);
-void FreeVolumeHandler(VolumePointsHandler vph);
+VolumePointsHandler CreateVolumeHandler(int maxOffset);
+void InsertVolumePoint(VolumePointsHandler *vph, VolumeControlPoint vp);
 
 void ProcessAudioGrains(GrainController gc, Wave wave, float *buffer, int bufferSize);
-void UpdateGrainVolume(GrainController gc, VolumePointsHandler vph);
+void UpdateGrainVolume(GrainController *gc, VolumePointsHandler vph);
