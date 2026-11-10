@@ -29,7 +29,7 @@ typedef struct{
     int n;
 
     int maxOffset;
-    VolumeControlPoint *selected;
+    int selectedIndex;
 }VolumePointsHandler;
 
 GrainController CreateGrainController(int n, int frameCount, int randomness);

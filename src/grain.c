@@ -1,7 +1,9 @@
 #include "grain.h"
 #include "stdlib.h"
 #include "helpers.h"
+
 #include <stdio.h>
+#include <math.h>
 
 /// @param randomness value between 0 and 100, changes offset in relation to main read point (0 is no offset)
 GrainController CreateGrainController(int n, int frameCount, int randomness){
@@ -13,12 +15,12 @@ GrainController CreateGrainController(int n, int frameCount, int randomness){
 	float start = 0;
 
 	for(int i = 0; i < n; i++){
-        Grain *g = &gc.grains[i];
+    Grain *g = &gc.grains[i];
 
 		g->readDirection = 1;
 		g->speed = 1;
 		g->volume = 1/(float)n; //normalization
-    g->offset = i > 1 ? GetRandomValue(-randomness * 10, randomness * 10)/10.0f : 0;
+    g->offset = i >= 1 ? GetRandomValue(-randomness * 10, randomness * 10)/10.0f : 0;
 		g->readPosition = (int)(start + g->offset * ((float)frameCount / 100.0f) + frameCount) % frameCount;
 		printf("%.2f", g->offset);
 	}
@@ -64,6 +66,8 @@ VolumePointsHandler CreateVolumeHandler(int maxOffset){
 	vph.vcps[1] = end;
 	vph.n = 2;
 
+	vph.selectedIndex = -1;
+
 	return vph;
 }
 
@@ -86,7 +90,6 @@ void InsertVolumePoint(VolumePointsHandler *vph, VolumeControlPoint vp){
 }
 
 void UpdateGrainVolume(GrainController *gc, VolumePointsHandler vph){
-	float total = 0;
 
 	for(int i = 0; i < gc->n; i++){
 		Grain *g = &gc->grains[i];
@@ -103,11 +106,11 @@ void UpdateGrainVolume(GrainController *gc, VolumePointsHandler vph){
 		VolumeControlPoint next = vph.vcps[index];
 
 		g->volume = fMap(g->offset, prev.offset, next.offset, prev.volume, next.volume);
-		total += g->volume;
 	}
 
+	//normalizing
 	for(int i = 0; i < gc->n; i++){
 		Grain *g = &gc->grains[i];
-		g->volume /= total;
+		g->volume /= sqrt(gc->n);
 	}
 }

@@ -43,25 +43,32 @@ int main ()
 	Rectangle grainViewBounds = {.x = marginLeft, .y = HEIGHT/4 + 20, .width = guiWidth, .height = HEIGHT/4 + 10};
 	Rectangle volumeBounds = {.x = marginLeft, .y = HEIGHT/2 + 40, .width = guiWidth, .height = HEIGHT/4 + 10};
 	
-	float randomness = 10;
-	GrainController gc = CreateGrainController(10, testWave.frameCount, randomness);
+	float randomness = 50;
+	GrainController gc = CreateGrainController(20, testWave.frameCount, randomness);
 	VolumePointsHandler vph = CreateVolumeHandler(randomness);
 
-	InsertVolumePoint(&vph, (VolumeControlPoint){0.95f, randomness * 0.9f});
+	InsertVolumePoint(&vph, (VolumeControlPoint){0.15f, randomness * 0.5f, false});
+	UpdateGrainVolume(&gc, vph);
 
 	// game loop
 	while (!WindowShouldClose())		// run the loop untill the user presses ESCAPE or presses the Close button on the window
 	{
+		Vector2 mousePos = GetMousePosition();
+		if(VolumeGUIHandler(&vph, volumeBounds, mousePos)){
+			UpdateGrainVolume(&gc, vph);
+		}
 
-		UpdateGrainVolume(&gc, vph);
 
 		// drawing
 		BeginDrawing();
 		// Setup the back buffer for drawing (clear color and depth buffers)
 		ClearBackground(LIGHTGRAY);
-		DrawWaveViewStatic(testWave, waveViewBounds, 2000);
+		DrawWaveViewStatic(testWave, waveViewBounds, 600);
 		DrawGrains(gc, grainViewBounds);
-		DrawVolumeControl(volumeBounds, vph);
+		DrawVolumeControl(vph, volumeBounds);
+
+		DrawText(TextFormat("Grain Count: %d", gc.n), WIDTH/2 + marginLeft * 2, 10, 20, BLACK);
+		DrawText(TextFormat("Randomness: %.1f", randomness), WIDTH/2 + marginLeft * 2, 60, 20, BLACK);
 
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();

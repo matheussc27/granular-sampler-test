@@ -5,6 +5,9 @@
 
 void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution);
 void DrawGrains(GrainController gc, Rectangle bounds);
-void DrawVolumeControl(Rectangle bounds, VolumePointsHandler vph);
+void DrawVolumeControl(VolumePointsHandler vph, Rectangle bounds);
 
-void CheckVolumeChanges(Rectangle bounds, VolumePointsHandler *vph);
+bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mousePos);
+
+VolumeControlPoint getVPFromPos(Vector2 pos, Rectangle bounds, float maxOffset);
+Vector2 getVPscreenPos(VolumeControlPoint vp, Rectangle bounds, float maxOffset);
