@@ -1,6 +1,9 @@
 #pragma once
 #include "raylib.h"
 
+//value to scale after normalization
+#define VOLUME_SCALE 3
+
 /// @brief One grain of the granular sampler
 typedef struct{
 	float readPosition; //current FRAME, not sample

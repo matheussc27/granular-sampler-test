@@ -31,11 +31,15 @@ void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution){
 void DrawGrains(GrainController gc, Rectangle bounds){
 	float margin = 10;
 	float grainSeparation = (gc.n > 1) ? (bounds.height - margin * 2) / (gc.n - 1) : 0;
-	for(int i = 0; i < gc.n; i++){
+	for(int i = 1; i < gc.n; i++){
 		int y = bounds.y + margin + grainSeparation * i;
 		int x = (int)fMap(gc.grains[i].readPosition, 0, gc.frameCount, bounds.x, bounds.x + bounds.width);
 		DrawCircle(x, y, 1, BLACK);
 	}
+
+	//draws line for base grain
+	int x = (int)fMap(gc.grains[0].readPosition, 0, gc.frameCount, bounds.x, bounds.x + bounds.width);
+	DrawLine(x, bounds.y, x, bounds.y + bounds.height, BLACK);
 
 	DrawRectangleLinesEx(bounds, 1, BLACK);
 }
@@ -122,7 +126,7 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 		Vector2 prevPos = getVPscreenPos(prev, bounds, vph->maxOffset);
 		Vector2 nextPos = getVPscreenPos(next, bounds, vph->maxOffset);
 
-		mousePos.x = fLimit(mousePos.x, bounds.x, lim.x); //limited by adjacent points
+		mousePos.x = fLimit(mousePos.x, prevPos.x, nextPos.x); //limited by adjacent points
 		mousePos.y = fLimit(mousePos.y, bounds.y, lim.y);
 
 		*selected = getVPFromPos(mousePos, bounds, vph->maxOffset);

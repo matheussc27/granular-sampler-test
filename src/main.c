@@ -33,15 +33,19 @@ int main ()
 
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
 	SearchAndSetResourceDir("resources");
+
 	Wave testWave = LoadWave("audio/gymnopedie1.wav");
 	WaveFormat(&testWave, SAMPLE_RATE, 32, 2);
 
 	//initialization
 	int marginLeft = 10;
+	int marginTop = 10;
 	int guiWidth = WIDTH/6 * 3;
-	Rectangle waveViewBounds = {.x = marginLeft, .y = 10, .width = guiWidth, .height = HEIGHT/4};
-	Rectangle grainViewBounds = {.x = marginLeft, .y = HEIGHT/4 + 20, .width = guiWidth, .height = HEIGHT/4 + 10};
-	Rectangle volumeBounds = {.x = marginLeft, .y = HEIGHT/2 + 40, .width = guiWidth, .height = HEIGHT/4 + 10};
+	int guiHeight = HEIGHT/4 + 20;
+
+	Rectangle waveViewBounds = {.x = marginLeft, .y = marginTop, .width = guiWidth, .height = guiHeight};
+	Rectangle grainViewBounds = {.x = marginLeft, .y = marginTop * 2 + guiHeight, .width = guiWidth, .height = guiHeight};
+	Rectangle volumeBounds = {.x = marginLeft, .y = marginTop * 3 + guiHeight * 2, .width = guiWidth, .height = guiHeight};
 	
 	float randomness = 50;
 	GrainController gc = CreateGrainController(20, testWave.frameCount, randomness);
@@ -69,6 +73,8 @@ int main ()
 
 		DrawText(TextFormat("Grain Count: %d", gc.n), WIDTH/2 + marginLeft * 2, 10, 20, BLACK);
 		DrawText(TextFormat("Randomness: %.1f", randomness), WIDTH/2 + marginLeft * 2, 60, 20, BLACK);
+		DrawText("0", volumeBounds.x, volumeBounds.y + volumeBounds.height + marginTop, 10, BLACK);
+		DrawText("MAX_OFFSET", volumeBounds.x + volumeBounds.width - 30, volumeBounds.y + volumeBounds.height + marginTop, 10, BLACK);
 
 		// end the frame and get ready for the next one  (display frame, poll input, etc...)
 		EndDrawing();
