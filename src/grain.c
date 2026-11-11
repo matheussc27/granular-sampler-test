@@ -71,7 +71,8 @@ VolumePointsHandler CreateVolumeHandler(int maxOffset){
 	return vph;
 }
 
-void InsertVolumePoint(VolumePointsHandler *vph, VolumeControlPoint vp){
+//returns insertion index
+int InsertVolumePoint(VolumePointsHandler *vph, VolumeControlPoint vp){
 	int insertIndex = -1;
 
 	for(int i = vph->n - 1; i >= 0; i--){
@@ -87,6 +88,7 @@ void InsertVolumePoint(VolumePointsHandler *vph, VolumeControlPoint vp){
 	}
 	vph->vcps[insertIndex] = vp;
 	vph->n++;
+	return insertIndex;
 }
 
 void UpdateGrainVolume(GrainController *gc, VolumePointsHandler vph){

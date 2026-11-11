@@ -39,7 +39,7 @@ GrainController CreateGrainController(int n, int frameCount, int randomness);
 void FreeGrainController(GrainController *gc);
 
 VolumePointsHandler CreateVolumeHandler(int maxOffset);
-void InsertVolumePoint(VolumePointsHandler *vph, VolumeControlPoint vp);
+int InsertVolumePoint(VolumePointsHandler *vph, VolumeControlPoint vp);
 
 void ProcessAudioGrains(GrainController gc, Wave wave, float *buffer, int bufferSize);
 void UpdateGrainVolume(GrainController *gc, VolumePointsHandler vph);

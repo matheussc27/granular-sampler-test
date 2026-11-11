@@ -28,6 +28,10 @@ void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution){
 	DrawRectangleLinesEx(bounds, 1, BLACK);
 }
 
+void DrawWaveViewReadLine(Grain mainGrain, Rectangle bounds){
+
+}
+
 void DrawGrains(GrainController gc, Rectangle bounds){
 	float margin = 10;
 	float grainSeparation = (gc.n > 1) ? (bounds.height - margin * 2) / (gc.n - 1) : 0;
@@ -45,27 +49,21 @@ void DrawGrains(GrainController gc, Rectangle bounds){
 }
 
 void DrawVolumeControl(VolumePointsHandler vph, Rectangle bounds){
-	int x = 0, y = 0;
-	int prevX = 0, prevY = 0;
+	Vector2 curr;
+	Vector2 prev;
 
 	for(int i = 0; i < vph.n; i++){
-		VolumeControlPoint vp = vph.vcps[i];
-
-		x = (int)fMap(vp.offset, 0, vph.maxOffset, bounds.x, bounds.x + bounds.width);
-		y = (int)fMap(vp.volume, 0, 1, bounds.y + bounds.height, bounds.y);
+		curr = getVPscreenPos(vph.vcps[i], bounds, vph.maxOffset);
 		
 		if(i > 0)
-			DrawLine(x, y, prevX, prevY, BLACK);
+			DrawLine(curr.x, curr.y, prev.x, prev.y, BLACK);
 
-		prevX = x;
-		prevY = y;
+		prev = curr;
 	}
 
 	for(int i = 1; i < vph.n - 1; i++){
-		VolumeControlPoint vp = vph.vcps[i];
-		x = (int)fMap(vp.offset, 0, vph.maxOffset, bounds.x, bounds.x + bounds.width);
-		y = (int)fMap(vp.volume, 0, 1, bounds.y + bounds.height, bounds.y);
-		DrawCircle(x, y, 3, BLACK);
+		curr = getVPscreenPos(vph.vcps[i], bounds, vph.maxOffset);
+		DrawCircle(curr.x, curr.y, VP_RADIUS, BLACK);
 	}
 
 	DrawRectangleLinesEx(bounds, 1, BLACK);
@@ -88,7 +86,7 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 		//mouse out of bounds, leave
 		if(mousePos.x < bounds.x || mousePos.x > lim.x
 		|| mousePos.y < bounds.y || mousePos.y > lim.y)
-				return;
+				return result;
 		
 		//check if there is one in mouse pos
 		for(int i = 0; i < vph->n; i++){
@@ -96,12 +94,8 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 			if(vp.isFixed)
 				continue;
 
-			Vector2 screenPos;
-
-			screenPos.x = fMap(vp.offset, 0, vph->maxOffset, bounds.x, lim.x);
-			screenPos.y = fMap(vp.volume, 0, 1, lim.y, bounds.y);
-
-			if(pow(screenPos.x - mousePos.x, 2) + pow(screenPos.y - mousePos.y, 2) < 9){
+			Vector2 screenPos = getVPscreenPos(vp, bounds, vph->maxOffset);
+			if(pow(screenPos.x - mousePos.x, 2) + pow(screenPos.y - mousePos.y, 2) < VP_RADIUS * VP_RADIUS * 10){
 				vph->selectedIndex = i;
 				break;
 			}
@@ -109,12 +103,11 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 
 		//add new point
 		if(vph->selectedIndex == -1){
-			VolumeControlPoint newPoint;
-			newPoint.offset = fMap(mousePos.x, bounds.x, lim.x, 0, vph->maxOffset);
-			newPoint.volume = fMap(mousePos.y, lim.y, bounds.y, 0, 1);
+			VolumeControlPoint newPoint =  getVPFromPos(mousePos, bounds, vph->maxOffset);
 			newPoint.isFixed = false;
 
-			InsertVolumePoint(vph, newPoint);
+			int index = InsertVolumePoint(vph, newPoint);
+			vph->selectedIndex = index;
 		}
 	}
 

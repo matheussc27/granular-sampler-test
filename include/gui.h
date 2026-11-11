@@ -3,6 +3,8 @@
 #pragma once
 #include "grain.h"
 
+#define VP_RADIUS 3
+
 void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution);
 void DrawGrains(GrainController gc, Rectangle bounds);
 void DrawVolumeControl(VolumePointsHandler vph, Rectangle bounds);
