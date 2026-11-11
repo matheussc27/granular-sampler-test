@@ -3,11 +3,6 @@
 #include "helpers.h"
 #include "math.h"
 
-#include "stdlib.h"
-#include "stdio.h"
-
-
-/// @brief Draws main viewer window and audio data
 void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution){
 	
 	int sampleSize = wave.channels * wave.frameCount;
@@ -69,7 +64,7 @@ void DrawVolumeControl(VolumePointsHandler vph, Rectangle bounds){
 	DrawRectangleLinesEx(bounds, 1, BLACK);
 }
 
-//return true if mouse was released
+
 bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mousePos){
 	bool result = false;
 

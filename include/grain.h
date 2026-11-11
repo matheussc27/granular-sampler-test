@@ -35,6 +35,7 @@ typedef struct{
     int selectedIndex;
 }VolumePointsHandler;
 
+
 GrainController CreateGrainController(int n, int frameCount, int randomness);
 void FreeGrainController(GrainController *gc);
 
