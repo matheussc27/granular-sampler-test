@@ -39,7 +39,7 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
  * @param bounds Limiting area of the conversion.
  * @param maxOffset Maximum offset a volume point can have, necessary for properly converting the x position to the offset.
  */
-VolumeControlPoint getVPFromPos(Vector2 pos, Rectangle bounds, float maxOffset);
+static VolumeControlPoint getVPFromPos(Vector2 pos, Rectangle bounds, float maxOffset);
 
 /**
  * @brief Given a volume point and a limiting area, calcules the absolute screen position of that point.
@@ -50,4 +50,4 @@ VolumeControlPoint getVPFromPos(Vector2 pos, Rectangle bounds, float maxOffset);
  * @param bounds Limiting area of the conversion.
  * @param maxOffset Maximum offset a volume point can have, necessary for properly converting the offset to the x position.
  */
-Vector2 getVPscreenPos(VolumeControlPoint vp, Rectangle bounds, float maxOffset);
+static Vector2 getVPscreenPos(VolumeControlPoint vp, Rectangle bounds, float maxOffset);

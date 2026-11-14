@@ -91,6 +91,20 @@ int InsertVolumePoint(VolumePointsHandler *vph, VolumeControlPoint vp){
 	return insertIndex;
 }
 
+//returns 0 on sucess
+int RemoveVolumePoint(VolumePointsHandler *vph, int index){
+	if(index < 0 || index >= vph->n)
+		return 1;
+	
+	for(int i = index; i < vph->n - 1; i++){
+		vph->vcps[i] = vph->vcps[i+1];
+	}
+	
+	vph->n--;
+	return 0;
+
+}
+
 void UpdateGrainVolume(GrainController *gc, VolumePointsHandler vph){
 	float total;
 

@@ -75,14 +75,19 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 
 	Vector2 lim = {.x = bounds.x + bounds.width, .y = bounds.y + bounds.height};
 
-	//either select or create new
-	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+	//either select, create new or delete
+
+	int mouseButton = 0; //0: not pressed, 1: left button, 2: right button
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) mouseButton = 1;
+	else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) mouseButton = 2;
+
+	if(mouseButton != 0){
 
 		//mouse out of bounds, leave
 		if(mousePos.x < bounds.x || mousePos.x > lim.x
 		|| mousePos.y < bounds.y || mousePos.y > lim.y)
 				return result;
-		
+			
 		//check if there is one in mouse pos
 		for(int i = 0; i < vph->n; i++){
 			VolumeControlPoint vp = vph->vcps[i];
@@ -97,12 +102,20 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 		}
 
 		//add new point
-		if(vph->selectedIndex == -1){
-			VolumeControlPoint newPoint =  getVPFromPos(mousePos, bounds, vph->maxOffset);
-			newPoint.isFixed = false;
+		if(mouseButton == 1){
+			if(vph->selectedIndex == -1){
+				VolumeControlPoint newPoint =  getVPFromPos(mousePos, bounds, vph->maxOffset);
+				newPoint.isFixed = false;
 
-			int index = InsertVolumePoint(vph, newPoint);
-			vph->selectedIndex = index;
+				int index = InsertVolumePoint(vph, newPoint);
+				vph->selectedIndex = index;
+			}
+		}
+		//delete point
+		if(mouseButton == 2){
+			if(vph->selectedIndex != -1)
+				RemoveVolumePoint(vph, vph->selectedIndex);
+			vph->selectedIndex = -1;
 		}
 	}
 
@@ -123,7 +136,7 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 	return result;
 }
 
-Vector2 getVPscreenPos(VolumeControlPoint vp, Rectangle bounds, float maxOffset){
+static Vector2 getVPscreenPos(VolumeControlPoint vp, Rectangle bounds, float maxOffset){
 	Vector2 screenPos;
 	Vector2 lim = {.x = bounds.x + bounds.width, .y = bounds.y + bounds.height};
 
@@ -133,7 +146,7 @@ Vector2 getVPscreenPos(VolumeControlPoint vp, Rectangle bounds, float maxOffset)
 	return screenPos;
 }
 
-VolumeControlPoint getVPFromPos(Vector2 pos, Rectangle bounds, float maxOffset){
+static VolumeControlPoint getVPFromPos(Vector2 pos, Rectangle bounds, float maxOffset){
 	VolumeControlPoint vp;
 	Vector2 lim = {.x = bounds.x + bounds.width, .y = bounds.y + bounds.height};
 
