@@ -8,6 +8,7 @@
 typedef struct{
 	float readPosition; //current FRAME, not sample
 	int readDirection;
+    float rawVolume; //pre normalization
 	float volume; //1.0f is max
 	float speed;
     float offset; //value between -100 and 100

@@ -48,10 +48,10 @@ int main ()
 	Rectangle volumeBounds = {.x = marginLeft, .y = marginTop * 3 + guiHeight * 2, .width = guiWidth, .height = guiHeight};
 	
 	float randomness = 50;
-	GrainController gc = CreateGrainController(20, testWave.frameCount, randomness);
-	VolumePointsHandler vph = CreateVolumeHandler(randomness);
+	GrainController gc = CreateGrainController(40, testWave.frameCount, randomness);
+	VolumePointsHandler vph = CreateVolumeHandler(randomness/2);
 
-	InsertVolumePoint(&vph, (VolumeControlPoint){0.15f, randomness * 0.5f, false});
+	InsertVolumePoint(&vph, (VolumeControlPoint){0.15f, randomness * 0.25f, false});
 	UpdateGrainVolume(&gc, vph);
 
 	// game loop

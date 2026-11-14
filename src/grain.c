@@ -19,6 +19,7 @@ GrainController CreateGrainController(int n, int frameCount, int randomness){
 
 		g->readDirection = 1;
 		g->speed = 1;
+		g->rawVolume = 1;
 		g->volume = 1;
     g->offset = i >= 1 ? GetRandomValue(-randomness/2 * 10, randomness/2 * 10)/10.0f : 0;
 		g->readPosition = (int)(start + g->offset * ((float)frameCount / 100.0f) + frameCount) % frameCount;
@@ -32,7 +33,6 @@ void FreeGrainController(GrainController *gc){
 }
 
 /// @brief Fills the buffer with new data considering the grains and updates grain data. Called when stream finishes processing.
-//optimization idea: get smallest start and higher end and loop only once checking grains on each point
 void ProcessAudioGrains(GrainController gc, Wave wave, float *buffer, int bufferSize){
 	float *waveData = wave.data;
 
@@ -122,13 +122,13 @@ void UpdateGrainVolume(GrainController *gc, VolumePointsHandler vph){
 		VolumeControlPoint prev = vph.vcps[index - 1];
 		VolumeControlPoint next = vph.vcps[index];
 
-		g->volume = fMap(g->offset, prev.offset, next.offset, prev.volume, next.volume);
-		total += g->volume;
+		g->rawVolume = fMap(g->offset, prev.offset, next.offset, prev.volume, next.volume);
+		total += g->rawVolume;
 	}
 
-	//normalizing
 	for(int i = 0; i < gc->n; i++){
 		Grain *g = &gc->grains[i];
-		g->volume /= sqrt(total);
+		g->volume = g->rawVolume / sqrt(total);
 	}
+
 }

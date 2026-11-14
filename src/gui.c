@@ -31,10 +31,10 @@ void DrawWaveViewReadLine(Grain mainGrain, Rectangle bounds, int frameCount){
 void DrawGrains(GrainController gc, Rectangle bounds){
 	float margin = 10;
 	float grainSeparation = (gc.n > 1) ? (bounds.height - margin * 2) / (gc.n - 1) : 0;
-	for(int i = 1; i < gc.n; i++){
+	for(int i = 0; i < gc.n; i++){
 		int y = bounds.y + margin + grainSeparation * i;
 		int x = (int)fMap(gc.grains[i].readPosition, 0, gc.frameCount, bounds.x, bounds.x + bounds.width);
-		DrawCircle(x, y, 1, BLACK);
+		DrawCircle(x, y, 2, (Color){gc.grains[i].rawVolume*255, 0, 0, 255});
 	}
 
 	DrawRectangleLinesEx(bounds, 1, BLACK);
