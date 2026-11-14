@@ -11,6 +11,9 @@
  * @param resolution Number of lines used for drawing.
  */
 void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution);
+
+void DrawWaveViewReadLine(Grain mainGrain, Rectangle bounds, int frameCount);
+
 /**
  * @brief Draws the grains as individual circles.
  * @param bounds Area used for drawing.

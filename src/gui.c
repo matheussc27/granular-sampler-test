@@ -23,8 +23,9 @@ void DrawWaveViewStatic(Wave wave, Rectangle bounds, int resolution){
 	DrawRectangleLinesEx(bounds, 1, BLACK);
 }
 
-void DrawWaveViewReadLine(Grain mainGrain, Rectangle bounds){
-
+void DrawWaveViewReadLine(Grain mainGrain, Rectangle bounds, int frameCount){
+	int x = (int)fMap(mainGrain.readPosition, 0, frameCount, bounds.x, bounds.x + bounds.width);
+	DrawLine(x, bounds.y, x, bounds.y + bounds.height, BLACK);
 }
 
 void DrawGrains(GrainController gc, Rectangle bounds){
@@ -35,10 +36,6 @@ void DrawGrains(GrainController gc, Rectangle bounds){
 		int x = (int)fMap(gc.grains[i].readPosition, 0, gc.frameCount, bounds.x, bounds.x + bounds.width);
 		DrawCircle(x, y, 1, BLACK);
 	}
-
-	//draws line for base grain
-	int x = (int)fMap(gc.grains[0].readPosition, 0, gc.frameCount, bounds.x, bounds.x + bounds.width);
-	DrawLine(x, bounds.y, x, bounds.y + bounds.height, BLACK);
 
 	DrawRectangleLinesEx(bounds, 1, BLACK);
 }
@@ -68,7 +65,8 @@ void DrawVolumeControl(VolumePointsHandler vph, Rectangle bounds){
 bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mousePos){
 	bool result = false;
 
-	if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)){
+	//when to update
+	if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
 		vph->selectedIndex = -1;
 		result = true;
 	}

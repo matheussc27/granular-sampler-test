@@ -68,6 +68,7 @@ int main ()
 		// Setup the back buffer for drawing (clear color and depth buffers)
 		ClearBackground(LIGHTGRAY);
 		DrawWaveViewStatic(testWave, waveViewBounds, 600);
+		DrawWaveViewReadLine(gc.grains[0], waveViewBounds, testWave.frameCount);
 		DrawGrains(gc, grainViewBounds);
 		DrawVolumeControl(vph, volumeBounds);
 
