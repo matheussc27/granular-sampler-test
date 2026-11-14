@@ -55,7 +55,7 @@ void DrawVolumeControl(VolumePointsHandler vph, Rectangle bounds){
 
 	for(int i = 1; i < vph.n - 1; i++){
 		curr = getVPscreenPos(vph.vcps[i], bounds, vph.maxOffset);
-		DrawCircle(curr.x, curr.y, VP_RADIUS, BLACK);
+		DrawCircle(curr.x, curr.y, VP_RADIUS, (i == vph.selectedIndex)? RED : BLACK);
 	}
 
 	DrawRectangleLinesEx(bounds, 1, BLACK);
@@ -66,7 +66,7 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 	bool result = false;
 
 	//when to update
-	if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
+	if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT) || IsMouseButtonReleased(MOUSE_BUTTON_RIGHT)){
 		vph->selectedIndex = -1;
 		result = true;
 	}
@@ -93,7 +93,7 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 				continue;
 
 			Vector2 screenPos = getVPscreenPos(vp, bounds, vph->maxOffset);
-			if(pow(screenPos.x - mousePos.x, 2) + pow(screenPos.y - mousePos.y, 2) < VP_RADIUS * VP_RADIUS * 10){
+			if(pow(screenPos.x - mousePos.x, 2) + pow(screenPos.y - mousePos.y, 2) <= VP_RADIUS * VP_RADIUS * 10){
 				vph->selectedIndex = i;
 				break;
 			}
@@ -129,6 +129,7 @@ bool VolumeGUIHandler(VolumePointsHandler *vph, Rectangle bounds, Vector2 mouseP
 		mousePos.y = fLimit(mousePos.y, bounds.y, lim.y);
 
 		*selected = getVPFromPos(mousePos, bounds, vph->maxOffset);
+		selected->isFixed = false;
 	}
 
 	return result;

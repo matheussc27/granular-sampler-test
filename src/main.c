@@ -47,8 +47,8 @@ int main ()
 	Rectangle grainViewBounds = {.x = marginLeft, .y = marginTop * 2 + guiHeight, .width = guiWidth, .height = guiHeight};
 	Rectangle volumeBounds = {.x = marginLeft, .y = marginTop * 3 + guiHeight * 2, .width = guiWidth, .height = guiHeight};
 	
-	float randomness = 50;
-	GrainController gc = CreateGrainController(40, testWave.frameCount, randomness);
+	float randomness = 100;
+	GrainController gc = CreateGrainController(10, testWave.frameCount, randomness);
 	VolumePointsHandler vph = CreateVolumeHandler(randomness/2);
 
 	InsertVolumePoint(&vph, (VolumeControlPoint){0.15f, randomness * 0.25f, false});
